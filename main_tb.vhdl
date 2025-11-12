@@ -9,7 +9,7 @@ entity tl_test is
         led_controller : out std_logic_vector(7 downto 0)
     );
 
-end entity tl_test;
+end entity tl_test; --test
 
 architecture testbench of main_tb is
 begin
