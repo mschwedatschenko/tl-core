@@ -5,52 +5,66 @@ use ieee.numeric_std.all;
 entity tl_core is
     port(
         adc_clk     : in  std_logic;
-        time_red : in  std_logic_vector(31 downto 0); -- red light time duration
-        time_green : in  std_logic_vector(31 downto 0); -- green light time duration
-        time_yellow : in  std_logic_vector(31 downto 0); -- yellow light time duration
-        
-        clock_out : out std_logic_vector(29 downto 0) := (others => '0'); -- clock counter output
         led_controller : out std_logic_vector(7 downto 0) := (others => '0'); 
-        cycles : out std_logic_vector(7 downto 0) := (others => '0'); -- counts clock cycles
-        milliseconds : out std_logic_vector(9 downto 0) := (others => '0');
-        seconds : out std_logic_vector(5 downto 0) := (others => '0');
     );
 end entity tl_core;
 
 architecture behavior of tl_core is
-    signal clock_cycles : integer range 0 to 125 := 0;
-    signal ms : integer range 0 to 1000 := 0; 
-    signal sec : integer range 0 to 60 := 0;
+    constant clk_frequency : integer:=125_000_000; --125MHz clock
+    constant tick : integer := clk_frequency - 1;
+
+    -- generates 1 tick/sec
+    signal tick_count : integer range 0 to tick := 0;
+    signal tick : STD_LOGIC := '0';
+
+    --time constants
+    constant time_red : integer := 10;
+    constant time_green : integer := 10;
+    constant time_yellow : integer := 5;
+
+    -- declaring state machine types
+    type state_type is (RED, GREEN, YELLOW);
+    signal state : state_type := RED;
+    signal timer : integer range 0 to 60 := 0;
     
+    -- this process generates a 1 Hz tick
     begin
-        process(adc_clk) -- counts cycles, then ms, then sec
+        process(adc_clk)
         begin
             if rising_edge(adc_clk) then
-                if(clock_cycles < 125) then -- 125 cycles = 1 ms at 125MHz clock
-                    clock_cycles <= clock_cycles + 1; 
-                    else
-                    clock_cycles <= 0;
-                    if ms < 1000 then
-                        ms <= ms + 1; -- milliseconds increment by 1
-                    else
-                        ms <= 0; -- reset millisecond counter
-                        if(sec < 60) then
-                            sec <= sec + 1; -- increment second counter by 1
-
-                        else
-                        sec <= 0; -- reset second counter
-                        end if;
-                    end if;
+                if tick_count = tick then
+                    tick_count <= 0;
+                    tick <= '1';
+                else 
+                    tick_count <= tick_count +1;
+                    tick <= '0';
                 end if;
-                else
-                    clock_cycles <= clock_cycles + 1;
             end if;
-                cycles <= std_logic_vector(to_unsigned(clock_cycles, 8)); 
-                clock_out <= std_logic_vector(to_unsigned(clock_cycles, 30)); -- output clock cycles
-                milliseconds <= std_logic_vector(to_unsigned(ms, 10));
-                seconds <= std_logic_vector(to_unsigned(sec, 6));
         end process;
 
+        --REAL STATE MACHINE GOES HERE!!! :P
+        process(adc_clk)
+        begin
+            if rising_edge(adc_clk) then
+
+                if one_sec_tick = '1' then
+                    -- Increment timer once per second
+                    timer <= timer + 1;
+                    case state is 
+
+                        when RED =>
+
+                        when GREEN =>
+
+                        when YELLOW =>
+
+                    end case;
+                end if;
+            end if;
+        end process;
+
+
+        -- LED CONTROLLER LOGIC
         -- for reference
         --red          <= '0'; 
         --yellow       <= '0';
@@ -60,17 +74,10 @@ architecture behavior of tl_core is
         --left_arrow_green   <= '0';   
         --right_arrow_yellow <= '0';
         --right_arrow_green  <= '0';
-        traffic_light_controller: process(sec, ms) is
-        begin
-            case sec is
-            when 0 to 9 =>
-                led_controller <= "10000000"; -- Red on
-            when 10 to 19 =>
-                led_controller <= "00100000"; -- Green on
-            when 20 to 22 =>
-                led_controller <= "01000000"; -- Yellow on
-            when others =>
-                led_controller <= "10000000"; -- Default red
-        end case;
-        end process traffic_light_controller;
+        with state select
+            led_controller <= 
+            "10000000" when RED,      -- red ON
+            "00100000" when GREEN,    -- green ON
+            "01000000" when YELLOW,   -- yellow ON
+            "10000000" when others;   -- default red
 end architecture behavior;
