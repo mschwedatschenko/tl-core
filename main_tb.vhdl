@@ -22,10 +22,11 @@ architecture testbench of tl_test is
 --        time_yellow : in  std_logic_vector(31 downto 0); -- yellow light time duration
         
 --        clock_out : out std_logic_vector(29 downto 0) := (others => '0'); -- clock counter output
-        led_controller : out std_logic_vector(7 downto 0) := (others => '0'); 
+        led_controller : out std_logic_vector(7 downto 0) := (others => '0');
 --        cycles : out std_logic_vector(7 downto 0) := (others => '0'); -- counts clock cycles
 --       milliseconds : out std_logic_vector(9 downto 0) := (others => '0');
 --        seconds : out std_logic_vector(5 downto 0) := (others => '0');
+        tick_count_out : out STD_LOGIC_VECTOR(31 downto 0) := (others => '0')
     );
     end component tl_core;
 
@@ -43,12 +44,15 @@ architecture testbench of tl_test is
   -- 125Mhz clock w/ 8ns period
   constant adc_clk_period : time := 8 ns;
 
+  signal tick_count_out : STD_LOGIC_VECTOR(31 downto 0) := (others => '0');
+
 begin
     uut : tl_core
     port map (
         adc_clk       => adc_clk,
         --rst       => clk_rst,
         led_controller => led_controller,
+        tick_count_out => tick_count_out
 
         );
 
