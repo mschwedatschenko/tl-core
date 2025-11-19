@@ -47,17 +47,26 @@ architecture behavior of tl_core is
         begin
             if rising_edge(adc_clk) then
 
-                if one_sec_tick = '1' then
+                if tick = '1' then
                     -- Increment timer once per second
                     timer <= timer + 1;
                     case state is 
 
                         when RED =>
-
+                            if timer >= time_red then
+                                state <= GREEN;
+                                timer <= 0;
+                            end if;
                         when GREEN =>
-
+                            if timer >= time_green then
+                                state <= YELLOW;
+                                timer <= 0;
+                            end if;
                         when YELLOW =>
-
+                            if timer >= time_yellow then
+                                state <= RED;
+                                timer <= 0;
+                            end if;
                     end case;
                 end if;
             end if;
