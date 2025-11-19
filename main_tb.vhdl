@@ -44,7 +44,7 @@ architecture testbench of tl_test is
   constant adc_clk_period : time := 8 ns;
 
 begin
-    uut : design_1_wrapper
+    uut : tl_core
     port map (
         adc_clk       => adc_clk,
         --rst       => clk_rst,
